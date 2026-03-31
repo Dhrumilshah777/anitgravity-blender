@@ -2,10 +2,15 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Bounds, Center, Environment, useGLTF } from "@react-three/drei";
-import { Suspense, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
+import { Box3, Vector3 } from "three";
 import type { Group } from "three";
 
-const MODEL_URL = "/jewelery_-_ring-_diamonds.glb";
+type ModelView = {
+  modelUrl: string;
+  scale?: number;
+  verticalOffset?: number;
+};
 
 type DragState = {
   dragging: boolean;
@@ -21,12 +26,26 @@ type DragState = {
 };
 
 function BlenderModel({
+  model,
   dragRef,
 }: {
+  model: ModelView;
   dragRef: React.RefObject<DragState>;
 }) {
-  const { scene } = useGLTF(MODEL_URL);
+  const { scene } = useGLTF(model.modelUrl);
   const groupRef = useRef<Group>(null);
+  const normalizedScale = useMemo(() => {
+    const box = new Box3().setFromObject(scene);
+    const size = new Vector3();
+    box.getSize(size);
+
+    const maxDim = Math.max(size.x, size.y, size.z);
+    if (!Number.isFinite(maxDim) || maxDim <= 0) return 1;
+
+    // Scale each model so its longest dimension is ~2.2 world units.
+    const target = 2.2;
+    return target / maxDim;
+  }, [scene]);
 
   useFrame((state) => {
     const group = groupRef.current;
@@ -51,7 +70,10 @@ function BlenderModel({
 
   return (
     <group ref={groupRef}>
-      <Center>
+      <Center
+        scale={(model.scale ?? 1) * normalizedScale}
+        position={[0, model.verticalOffset ?? 0, 0]}
+      >
         <primitive object={scene} />
       </Center>
     </group>
@@ -61,9 +83,10 @@ function BlenderModel({
 type BlenderSceneProps = {
   /** Override default height (e.g. `h-full` when inside a layout cell). */
   className?: string;
+  model: ModelView;
 };
 
-export function BlenderScene({ className }: BlenderSceneProps = {}) {
+export function BlenderScene({ className, model }: BlenderSceneProps) {
   const dragRef = useRef<DragState>({
     dragging: false,
     armed: false,
@@ -161,7 +184,7 @@ export function BlenderScene({ className }: BlenderSceneProps = {}) {
           />
           <directionalLight position={[4, 6, 5]} intensity={2} />
           <Bounds fit clip margin={1.2}>
-            <BlenderModel dragRef={dragRef} />
+            <BlenderModel model={model} dragRef={dragRef} />
           </Bounds>
           <Environment preset="city" />
         </Suspense>
@@ -170,4 +193,3 @@ export function BlenderScene({ className }: BlenderSceneProps = {}) {
   );
 }
 
-useGLTF.preload(MODEL_URL);
