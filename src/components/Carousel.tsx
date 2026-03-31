@@ -29,25 +29,7 @@ const slides: Slide[] = [
 
 export function Carousel() {
   const [index, setIndex] = useState(0);
-  const [scrollProgress, setScrollProgress] = useState(0);
   const count = slides.length;
-
-  useEffect(() => {
-    const onScroll = () => {
-      const max = Math.max(
-        document.documentElement.scrollHeight - window.innerHeight,
-        1,
-      );
-      setScrollProgress(window.scrollY / max);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
 
   const goTo = useCallback(
     (next: number) => {
@@ -76,10 +58,7 @@ export function Carousel() {
     >
       <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <div className="min-h-[40vh] flex-1 border-b border-zinc-200 lg:min-h-0 lg:w-1/2 lg:border-b-0 lg:border-r dark:border-zinc-800">
-          <BlenderScene
-            className="h-full min-h-0"
-            scrollProgress={scrollProgress}
-          />
+          <BlenderScene className="h-full min-h-0" />
         </div>
 
         <div className="relative z-20 flex min-h-0 min-w-0 flex-1 flex-col bg-white dark:bg-zinc-950">
