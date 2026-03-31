@@ -90,9 +90,13 @@ export function BlenderScene({
   return (
     <div
       className={
-        className ? `w-full ${className}` : "h-[min(70vh,560px)] w-full"
+        className
+          ? `w-full touch-none select-none ${className}`
+          : "h-[min(70vh,560px)] w-full touch-none select-none"
       }
+      style={{ touchAction: "none" }}
       onPointerDown={(event) => {
+        event.preventDefault();
         dragRef.current.dragging = true;
         dragRef.current.lastX = event.clientX;
         dragRef.current.lastY = event.clientY;
@@ -100,22 +104,26 @@ export function BlenderScene({
       }}
       onPointerMove={(event) => {
         if (!dragRef.current.dragging) return;
+        event.preventDefault();
 
         const deltaX = event.clientX - dragRef.current.lastX;
         const deltaY = event.clientY - dragRef.current.lastY;
         dragRef.current.lastX = event.clientX;
         dragRef.current.lastY = event.clientY;
-        dragRef.current.rotationY += deltaX * 0.01;
+        const isTouch = event.pointerType === "touch";
+        dragRef.current.rotationY += deltaX * (isTouch ? 0.015 : 0.01);
         dragRef.current.rotationX = Math.max(
           -0.9,
-          Math.min(0.9, dragRef.current.rotationX + deltaY * 0.006),
+          Math.min(0.9, dragRef.current.rotationX + deltaY * (isTouch ? 0.008 : 0.006)),
         );
       }}
       onPointerUp={(event) => {
+        event.preventDefault();
         dragRef.current.dragging = false;
         event.currentTarget.releasePointerCapture(event.pointerId);
       }}
       onPointerCancel={(event) => {
+        event.preventDefault();
         dragRef.current.dragging = false;
         event.currentTarget.releasePointerCapture(event.pointerId);
       }}
