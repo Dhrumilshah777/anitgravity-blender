@@ -13,6 +13,8 @@ type DragState = {
   lastY: number;
   rotationX: number;
   rotationY: number;
+  targetRotationX: number;
+  targetRotationY: number;
 };
 
 function BlenderModel({
@@ -47,11 +49,19 @@ function BlenderModel({
     if (group) {
       const progress = progressRef.current;
       const isMobile = isMobileRef.current;
-      const dragRotationX = dragRef.current?.rotationX ?? 0;
-      const dragRotation = dragRef.current?.rotationY ?? 0;
+      const drag = dragRef.current;
+
+      if (drag) {
+        const smoothing = isMobile ? 0.16 : 0.12;
+        drag.rotationY += (drag.targetRotationY - drag.rotationY) * smoothing;
+        drag.rotationX += (drag.targetRotationX - drag.rotationX) * smoothing;
+      }
+
+      const dragRotationX = drag?.rotationX ?? 0;
+      const dragRotationY = drag?.rotationY ?? 0;
 
       group.rotation.y =
-        progress * Math.PI * (isMobile ? 2.5 : 4) + dragRotation;
+        progress * Math.PI * (isMobile ? 2.5 : 4) + dragRotationY;
       group.rotation.x += (dragRotationX - group.rotation.x) * 0.12;
       group.position.y = isMobile
         ? 0.15 - progress * 0.45
@@ -85,6 +95,8 @@ export function BlenderScene({
     lastY: 0,
     rotationX: 0,
     rotationY: 0,
+    targetRotationX: 0,
+    targetRotationY: 0,
   });
 
   return (
@@ -111,10 +123,13 @@ export function BlenderScene({
         dragRef.current.lastX = event.clientX;
         dragRef.current.lastY = event.clientY;
         const isTouch = event.pointerType === "touch";
-        dragRef.current.rotationY += deltaX * (isTouch ? 0.015 : 0.01);
-        dragRef.current.rotationX = Math.max(
+        dragRef.current.targetRotationY += deltaX * (isTouch ? 0.01 : 0.008);
+        dragRef.current.targetRotationX = Math.max(
           -0.9,
-          Math.min(0.9, dragRef.current.rotationX + deltaY * (isTouch ? 0.008 : 0.006)),
+          Math.min(
+            0.9,
+            dragRef.current.targetRotationX + deltaY * (isTouch ? 0.005 : 0.004),
+          ),
         );
       }}
       onPointerUp={(event) => {
