@@ -9,8 +9,11 @@ const MODEL_URL = "/jewelery_-_ring-_diamonds.glb";
 
 type DragState = {
   dragging: boolean;
+  armed: boolean;
   lastX: number;
   lastY: number;
+  startX: number;
+  startY: number;
   rotationX: number;
   rotationY: number;
   targetRotationX: number;
@@ -91,8 +94,11 @@ export function BlenderScene({
 }: BlenderSceneProps = {}) {
   const dragRef = useRef<DragState>({
     dragging: false,
+    armed: false,
     lastX: 0,
     lastY: 0,
+    startX: 0,
+    startY: 0,
     rotationX: 0,
     rotationY: 0,
     targetRotationX: 0,
@@ -103,44 +109,67 @@ export function BlenderScene({
     <div
       className={
         className
-          ? `w-full touch-none select-none ${className}`
-          : "h-[min(70vh,560px)] w-full touch-none select-none"
+          ? `w-full select-none ${className}`
+          : "h-[min(70vh,560px)] w-full select-none"
       }
-      style={{ touchAction: "none" }}
+      style={{ touchAction: "pan-y" }}
       onPointerDown={(event) => {
-        event.preventDefault();
-        dragRef.current.dragging = true;
+        dragRef.current.armed = true;
+        dragRef.current.dragging = false;
+        dragRef.current.startX = event.clientX;
+        dragRef.current.startY = event.clientY;
         dragRef.current.lastX = event.clientX;
         dragRef.current.lastY = event.clientY;
-        event.currentTarget.setPointerCapture(event.pointerId);
       }}
       onPointerMove={(event) => {
-        if (!dragRef.current.dragging) return;
-        event.preventDefault();
+        const drag = dragRef.current;
+        if (!drag.armed) return;
 
         const deltaX = event.clientX - dragRef.current.lastX;
         const deltaY = event.clientY - dragRef.current.lastY;
         dragRef.current.lastX = event.clientX;
         dragRef.current.lastY = event.clientY;
+
+        const totalX = event.clientX - drag.startX;
+        const totalY = event.clientY - drag.startY;
+        const threshold = event.pointerType === "touch" ? 10 : 4;
+
+        if (!drag.dragging) {
+          // Only start rotating when the user is clearly dragging horizontally.
+          if (Math.abs(totalX) > Math.abs(totalY) && Math.abs(totalX) > threshold) {
+            drag.dragging = true;
+            event.preventDefault();
+            event.currentTarget.setPointerCapture(event.pointerId);
+          } else {
+            return; // allow normal page scroll
+          }
+        }
+
+        event.preventDefault();
         const isTouch = event.pointerType === "touch";
-        dragRef.current.targetRotationY += deltaX * (isTouch ? 0.01 : 0.008);
-        dragRef.current.targetRotationX = Math.max(
+        drag.targetRotationY += deltaX * (isTouch ? 0.012 : 0.01);
+        drag.targetRotationX = Math.max(
           -0.9,
-          Math.min(
-            0.9,
-            dragRef.current.targetRotationX + deltaY * (isTouch ? 0.005 : 0.004),
-          ),
+          Math.min(0.9, drag.targetRotationX + deltaY * (isTouch ? 0.006 : 0.005)),
         );
       }}
       onPointerUp={(event) => {
-        event.preventDefault();
-        dragRef.current.dragging = false;
-        event.currentTarget.releasePointerCapture(event.pointerId);
+        const drag = dragRef.current;
+        drag.armed = false;
+        if (drag.dragging) {
+          event.preventDefault();
+          drag.dragging = false;
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
       }}
       onPointerCancel={(event) => {
-        event.preventDefault();
-        dragRef.current.dragging = false;
-        event.currentTarget.releasePointerCapture(event.pointerId);
+        const drag = dragRef.current;
+        drag.armed = false;
+        if (drag.dragging) {
+          event.preventDefault();
+          drag.dragging = false;
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
       }}
     >
       <Canvas
