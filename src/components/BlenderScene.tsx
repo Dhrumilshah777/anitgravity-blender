@@ -2,7 +2,7 @@
 
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Bounds, Center, Environment, useGLTF } from "@react-three/drei";
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useRef } from "react";
 import type { Group } from "three";
 
 const MODEL_URL = "/jewelery_-_ring-_diamonds.glb";
@@ -21,41 +21,21 @@ type DragState = {
 };
 
 function BlenderModel({
-  scrollProgress,
   dragRef,
 }: {
-  scrollProgress: number;
   dragRef: React.RefObject<DragState>;
 }) {
   const { scene } = useGLTF(MODEL_URL);
   const groupRef = useRef<Group>(null);
-  const progressRef = useRef(scrollProgress);
-  const isMobileRef = useRef(false);
 
-  useEffect(() => {
-    progressRef.current = scrollProgress;
-  }, [scrollProgress]);
-
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 767px)");
-    const update = () => {
-      isMobileRef.current = media.matches;
-    };
-
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-
-  useFrame(() => {
+  useFrame((state) => {
     const group = groupRef.current;
     if (group) {
-      const progress = progressRef.current;
-      const isMobile = isMobileRef.current;
       const drag = dragRef.current;
+      const time = state.clock.getElapsedTime();
 
       if (drag) {
-        const smoothing = isMobile ? 0.16 : 0.12;
+        const smoothing = 0.12;
         drag.rotationY += (drag.targetRotationY - drag.rotationY) * smoothing;
         drag.rotationX += (drag.targetRotationX - drag.rotationX) * smoothing;
       }
@@ -63,12 +43,9 @@ function BlenderModel({
       const dragRotationX = drag?.rotationX ?? 0;
       const dragRotationY = drag?.rotationY ?? 0;
 
-      group.rotation.y =
-        progress * Math.PI * (isMobile ? 2.5 : 4) + dragRotationY;
+      group.rotation.y = time * 0.35 + dragRotationY;
       group.rotation.x += (dragRotationX - group.rotation.x) * 0.12;
-      group.position.y = isMobile
-        ? 0.15 - progress * 0.45
-        : 1 - progress * 2.4;
+      group.position.y = Math.sin(time * 0.9) * 0.08;
     }
   });
 
@@ -84,14 +61,9 @@ function BlenderModel({
 type BlenderSceneProps = {
   /** Override default height (e.g. `h-full` when inside a layout cell). */
   className?: string;
-  /** 0 = top of page, 1 = bottom; used for scroll rotation. */
-  scrollProgress?: number;
 };
 
-export function BlenderScene({
-  className,
-  scrollProgress = 0,
-}: BlenderSceneProps = {}) {
+export function BlenderScene({ className }: BlenderSceneProps = {}) {
   const dragRef = useRef<DragState>({
     dragging: false,
     armed: false,
@@ -189,7 +161,7 @@ export function BlenderScene({
           />
           <directionalLight position={[4, 6, 5]} intensity={2} />
           <Bounds fit clip margin={1.2}>
-            <BlenderModel scrollProgress={scrollProgress} dragRef={dragRef} />
+            <BlenderModel dragRef={dragRef} />
           </Bounds>
           <Environment preset="city" />
         </Suspense>
