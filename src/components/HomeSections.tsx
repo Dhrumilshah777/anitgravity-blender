@@ -16,12 +16,11 @@ export function HomeSections() {
             id="work-heading"
             className="text-balance text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50 sm:text-3xl"
           >
-            Work
+            Featured Collection
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 sm:text-base">
-            Placeholder blocks you can replace with projects, case studies, or
-            gallery items. The layout stays simple and works in light and dark
-            mode.
+            A refined jewelry showcase with an interactive 3D ring viewer,
+            elegant imagery, and supporting content blocks for your collection.
           </p>
           <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
