@@ -42,7 +42,7 @@ export default function Home() {
             Crafted Detail
           </p>
           <p className="mt-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300 sm:text-base">
-            A subtle interactive ring showcase with smooth motion and touch-friendly rotation.
+            Discover fine jewelry with interactive 3D viewing and smooth touch-friendly motion.
           </p>
         </div>
         <div className="absolute inset-y-0 left-4 z-10 flex items-center sm:left-6">
