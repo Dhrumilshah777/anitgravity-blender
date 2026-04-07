@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Bounds, Center, Environment, useGLTF } from "@react-three/drei";
+import { Bounds, Center, Environment, Html, useGLTF } from "@react-three/drei";
 import { Suspense, useMemo, useRef } from "react";
 import { Box3, Vector3 } from "three";
 import type { Group } from "three";
@@ -77,6 +77,18 @@ function BlenderModel({
         <primitive object={scene} />
       </Center>
     </group>
+  );
+}
+
+function ModelLoader() {
+  return (
+    <Center>
+      <Html center>
+        <div className="whitespace-nowrap rounded-md bg-black/60 px-6 py-4 font-serif text-3xl font-semibold tracking-wide text-white backdrop-blur">
+          Wait for it...
+        </div>
+      </Html>
+    </Center>
   );
 }
 
@@ -176,7 +188,7 @@ export function BlenderScene({ className, model }: BlenderSceneProps) {
           gl.setClearAlpha(0);
         }}
       >
-        <Suspense fallback={null}>
+        <Suspense fallback={<ModelLoader />}>
           <ambientLight intensity={1.2} />
           <hemisphereLight
             args={["#ffffff", "#d4d4d8", 1.5]}
